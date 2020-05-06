@@ -11,9 +11,11 @@ namespace SurfLightFunctions
 {
     public static class SurfLimitTimerFunction
     {
+        private static ILogger _logger { get; set; }
+
         private const string _lifxApiUrl = "https://api.lifx.com/v1/lights/";
-        private const string _lightSelectorId = "light id";
-        private const string _lifxApiToken = "lifx token";
+        private const string _lightSelectorId = "selector";
+        private const string _lifxApiToken = "api-token";
 
         private const string _bomApiUrl = "http://www.bom.gov.au/fwo/IDQ60801/IDQ60801.94592.json";
 
@@ -22,15 +24,21 @@ namespace SurfLightFunctions
         private const string _waveDataLocation = "Tweed Heads Mk4";
 
         [FunctionName("SurfLimitTimerFunction")]
-        public static async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 10 5 * * *")]TimerInfo myTimer, ILogger _log)
         {
-            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            _logger = _log;
+            _logger.LogInformation($"STARTING FUNCTION APP RUN");
+            _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
             var swellData = await GetSwellData();
             var latestSwellData = ReadSwellData(swellData);
 
+            _logger.LogInformation($"Got swell data. period: {latestSwellData.TimePeriod}; height: {latestSwellData.WaveHeight}");
+
             var bomData = await GetWindData();
             var latestWindData = ReadBomData(bomData);
+
+            _logger.LogInformation($"Got wind data. speed: {latestWindData.WindSpeed}; direction: {latestWindData.WindDirection.ToString()}");
 
             var windDirGood = (int)latestWindData.WindDirection <= 5;
             var windSpeedGood = latestWindData.WindSpeed < 15;
@@ -43,97 +51,111 @@ namespace SurfLightFunctions
                 : new { power = "on", color = "red" };
 
             await SetLight(lightStatus);
+
+            _logger.LogInformation("FINSIHED EXECUTING");
+
+            return;
         }
 
         private static async Task SetLight(object lightStatus)
         {
-            using (var httpClient = new HttpClient())
-            {
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(_lifxApiUrl + _lightSelectorId + "/state"),
-                    Method = HttpMethod.Put,
-                    Content = new StringContent(JsonSerializer.Serialize(lightStatus), Encoding.UTF8, "application/json")
-                };
-                request.Headers.Add("Authorization", $"Bearer {_lifxApiToken}");
+            using HttpClient httpClient = new HttpClient();
 
-                var response = await httpClient.SendAsync(request);
-            }
+            var request = new HttpRequestMessage
+            {
+                RequestUri = new Uri(_lifxApiUrl + _lightSelectorId + "/state"),
+                Method = HttpMethod.Put,
+                Content = new StringContent(JsonSerializer.Serialize(lightStatus), Encoding.UTF8, "application/json")
+            };
+            request.Headers.Add("Authorization", $"Bearer {_lifxApiToken}");
+
+            var response = await httpClient.SendAsync(request);
+
+            return;
         }
 
         private static async Task<string> GetWindData()
         {
-            using (var httpClient = new HttpClient())
+            _logger.LogInformation($"Reading swell data");
+
+            using HttpClient httpClient = new HttpClient();
+
+            var request = new HttpRequestMessage
             {
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(_bomApiUrl),
-                    Method = HttpMethod.Get
-                };
+                RequestUri = new Uri(_bomApiUrl),
+                Method = HttpMethod.Get
+            };
 
-                request.Headers.Add("User-Agent", $"Api-Agent");
+            request.Headers.Add("User-Agent", $"Api-Agent");
 
-                var response = await httpClient.SendAsync(request);
+            var response = await httpClient.SendAsync(request);
 
-                return await response.Content.ReadAsStringAsync();
-            }
+            return await response.Content.ReadAsStringAsync();
         }
 
         private static BomResponseData ReadBomData(string data)
         {
-            using (JsonDocument jsonDoc = JsonDocument.Parse(data))
-            {
-                JsonElement root = jsonDoc.RootElement;
-                JsonElement dataArray = root.GetProperty("observations").GetProperty("data");
+            _logger.LogInformation($"Reading bom data");
 
-                JsonElement latestData = dataArray.EnumerateArray().First();
+            using JsonDocument jsonDoc = JsonDocument.Parse(data);
 
-                var windDir = latestData.GetProperty("wind_dir");
-                var windSp = latestData.GetProperty("wind_spd_kmh");
+            JsonElement root = jsonDoc.RootElement;
+            JsonElement dataArray = root.GetProperty("observations").GetProperty("data");
 
-                return new BomResponseData { WindSpeed = windSp.GetInt32(), WindDirection = Enum.Parse<WindDirection>(windDir.GetString()) };
-            }
+            JsonElement latestData = dataArray.EnumerateArray().First();
+
+            var windDir = latestData.GetProperty("wind_dir");
+            var windSp = latestData.GetProperty("wind_spd_kmh");
+
+            return new BomResponseData { WindSpeed = windSp.GetInt32(), WindDirection = Enum.Parse<WindDirection>(windDir.GetString()) };
         }
 
         private static async Task<string> GetSwellData()
         {
-            using (var httpClient = new HttpClient())
+            _logger.LogInformation($"Getting swell data");
+
+            using HttpClient httpClient = new HttpClient();
+
+            var x = new
             {
-                var x = new
-                {
-                    limit = "100",
-                    offset = "300",
-                    resource_id = _qldWaveDataResourceId,
-                    filters = $"{{\"Site\":[\"{_waveDataLocation}\"]}}"
-                };
+                limit = "100",
+                offset = "300",
+                resource_id = _qldWaveDataResourceId,
+                filters = $"{{\"Site\":[\"{_waveDataLocation}\"]}}"
+            };
 
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(_qldWaveDataUrl),
-                    Method = HttpMethod.Post,
-                    Content = new StringContent(JsonSerializer.Serialize(x), Encoding.UTF8, "application/json")
-                };
+            var request = new HttpRequestMessage
+            {
+                RequestUri = new Uri(_qldWaveDataUrl),
+                Method = HttpMethod.Post,
+                Content = new StringContent(JsonSerializer.Serialize(x), Encoding.UTF8, "application/json")
+            };
 
-                var response = await httpClient.SendAsync(request);
+            var response = await httpClient.SendAsync(request);
 
-                return await response.Content.ReadAsStringAsync();
-            }
+            _logger.LogInformation($"Got swell data");
+
+            var result = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation(result);
+
+            return result;
         }
 
         private static WaveDataRecord ReadSwellData(string data)
         {
-            using (JsonDocument jsonDoc = JsonDocument.Parse(data))
-            {
-                JsonElement root = jsonDoc.RootElement;
-                JsonElement dataArray = root.GetProperty("result").GetProperty("records");
+            _logger.LogInformation($"Reading swell data");
 
-                JsonElement latestData = dataArray.EnumerateArray().Last();
+            using JsonDocument jsonDoc = JsonDocument.Parse(data);
 
-                var time = latestData.GetProperty("Tp");
-                var height = latestData.GetProperty("Hmax");
+            JsonElement root = jsonDoc.RootElement;
+            JsonElement dataArray = root.GetProperty("result").GetProperty("records");
 
-                return new WaveDataRecord { TimePeriod = time.GetDouble(), WaveHeight = height.GetDouble() };
-            }
+            JsonElement latestData = dataArray.EnumerateArray().Last();
+
+            var time = latestData.GetProperty("Tp");
+            var height = latestData.GetProperty("Hmax");
+
+            return new WaveDataRecord { TimePeriod = time.GetDouble(), WaveHeight = height.GetDouble() };
         }
     }
 }
