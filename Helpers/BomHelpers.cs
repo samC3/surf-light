@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using SurfLightFunctions.Models;
 
 namespace SurfLightFunctions.Helpers
 {
