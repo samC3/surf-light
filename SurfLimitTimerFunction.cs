@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using static SurfLightFunctions.Helpers.LifxHelpers;
 using static SurfLightFunctions.Helpers.BomHelpers;
 using static SurfLightFunctions.Helpers.QldDataHelpers;
-using SurfLightFunctions.Models;
+using static SurfLightFunctions.SurfQualityAlgorithm;
 
 namespace SurfLightFunctions
 {
@@ -27,15 +27,7 @@ namespace SurfLightFunctions
 
             log.LogInformation($"Got wind data. speed: {latestWindData.WindSpeed}; direction: {latestWindData.WindDirection.ToString()}");
 
-            var windDirGood = (int)latestWindData.WindDirection <= 5;
-            var windSpeedGood = latestWindData.WindSpeed < 15;
-
-            var wavePeriodGood = latestSwellData.TimePeriod >= 7;
-            var waveHeight = latestSwellData.WaveHeight >= 0.50;
-
-            var lightStatus = windDirGood && windSpeedGood && wavePeriodGood && waveHeight
-                ? new LifxPayload { Power = "on", Color = "#f8e5c2", Brightness = "1", Duration = "10" }
-                : new LifxPayload { Power = "on", Color = "#f08848", Brightness = "0.5", Duration = "20" };
+            var lightStatus = GoSurfing(latestSwellData, latestWindData) ? goSurfing : skipSurfing;
 
             await SetLight(lightStatus);
 

@@ -9,6 +9,22 @@ namespace SurfLightFunctions.Helpers
 {
     public static class LifxHelpers
     {
+        public static LifxPayload goSurfing = new LifxPayload
+        {
+            Power = "on",
+            Color = "#f8e5c2",
+            Brightness = "1",
+            Duration = "10"
+        };
+
+        public static LifxPayload skipSurfing = new LifxPayload
+        {
+            Power = "on",
+            Color = "#f08848",
+            Brightness = "0.3",
+            Duration = "20"
+        };
+
         private static string _lifxApiUrl = Environment.GetEnvironmentVariable("LifxApiUrl");
         private static string _lightSelectorId = Environment.GetEnvironmentVariable("LifxSelectorId");
         private static string _lifxApiToken = Environment.GetEnvironmentVariable("LifxApiToken");
