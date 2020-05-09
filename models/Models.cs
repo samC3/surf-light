@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace SurfLightFunctions
+namespace SurfLightFunctions.Models
 {
     public class WaveDataRecord
     {
@@ -14,6 +14,12 @@ namespace SurfLightFunctions
     {
         [JsonPropertyName("power")]
         public string Power { get; set; }
+        [JsonPropertyName("color")]
+        public string Color { get; set; }
+        [JsonPropertyName("brightness")]
+        public string Brightness { get; set; }
+        [JsonPropertyName("duration")]
+        public string Duration { get; set; }
     }
 
     public class BomResponseData

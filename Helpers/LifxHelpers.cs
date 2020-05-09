@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using SurfLightFunctions.Models;
 
 namespace SurfLightFunctions.Helpers
 {
@@ -12,7 +13,7 @@ namespace SurfLightFunctions.Helpers
         private static string _lightSelectorId = Environment.GetEnvironmentVariable("LifxSelectorId");
         private static string _lifxApiToken = Environment.GetEnvironmentVariable("LifxApiToken");
 
-        public static async Task SetLight(object lightStatus)
+        public static async Task SetLight(LifxPayload lightStatus)
         {
             using HttpClient httpClient = new HttpClient();
 

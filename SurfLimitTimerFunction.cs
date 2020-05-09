@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using static SurfLightFunctions.Helpers.LifxHelpers;
 using static SurfLightFunctions.Helpers.BomHelpers;
 using static SurfLightFunctions.Helpers.QldDataHelpers;
+using SurfLightFunctions.Models;
 
 namespace SurfLightFunctions
 {
@@ -33,8 +34,8 @@ namespace SurfLightFunctions
             var waveHeight = latestSwellData.WaveHeight >= 0.50;
 
             var lightStatus = windDirGood && windSpeedGood && wavePeriodGood && waveHeight
-                ? new { power = "on", color = "green" }
-                : new { power = "on", color = "red" };
+                ? new LifxPayload { Power = "on", Color = "#f8e5c2", Brightness = "1", Duration = "10" }
+                : new LifxPayload { Power = "on", Color = "#f08848", Brightness = "0.5", Duration = "20" };
 
             await SetLight(lightStatus);
 
