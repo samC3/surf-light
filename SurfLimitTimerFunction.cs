@@ -12,7 +12,7 @@ namespace SurfLightFunctions
     public static class SurfLimitTimerFunction
     {
         [FunctionName("SurfLimitTimerFunction")]
-        public static async Task Run([TimerTrigger("0 10 5 * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 10 19 * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"STARTING FUNCTION APP RUN");
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");

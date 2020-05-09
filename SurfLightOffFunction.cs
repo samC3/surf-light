@@ -9,9 +9,10 @@ namespace SurfLightFunctions
     public static class SurfLightOffFunction
     {
         [FunctionName("SurfLightOffFunction")]
-        public static async Task Run([TimerTrigger("0 45 5 * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 45 19 * * *")]TimerInfo myTimer, ILogger log)
         {
-            await SetLight(new LifxPayload { Power = "off" });
+            log.LogInformation("TURNING OFF SURF LIGHT");
+            await SetLight(new LifxPayload { Power = "off", Duration = 3 });
             return;
         }
     }
