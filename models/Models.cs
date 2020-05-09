@@ -17,9 +17,9 @@ namespace SurfLightFunctions.Models
         [JsonPropertyName("color")]
         public string Color { get; set; }
         [JsonPropertyName("brightness")]
-        public string Brightness { get; set; }
+        public double Brightness { get; set; }
         [JsonPropertyName("duration")]
-        public string Duration { get; set; }
+        public double Duration { get; set; }
     }
 
     public class BomResponseData
