@@ -25,6 +25,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 
+[Pp]roperties/[Pp]ublish[Pp]rofiles/
+
 # Visual Studio 2015 cache/options directory
 .vs/
 .vscode/
